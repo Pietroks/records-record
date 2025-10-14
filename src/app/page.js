@@ -13,7 +13,7 @@ export default function HomePage() {
 
   async function fetchAlbums() {
     setLoading(true);
-    const { data, error } = await supabase.from("albums").select("*").order("created_at", { ascending: true });
+    const { data, error } = await supabase.from("albums").select("*").order("criado_em", { ascending: true });
 
     if (error) {
       console.error("Erro ao buscar albums:", error);
