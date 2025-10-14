@@ -1,7 +1,7 @@
-"use-client";
+"use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "../../lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 import AlbumCard from "@/components/AlbumCard";
 import AddAlbumForm from "@/components/AddAlbumForm";
 import ReviewModal from "@/components/ReviewModal";

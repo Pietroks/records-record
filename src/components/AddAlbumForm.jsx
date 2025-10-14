@@ -1,7 +1,7 @@
-"use Client";
+"use client";
 
-import { use, useState } from "react";
-import { supabase } from "../../lib/supabaseClient";
+import { useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function AddAlbumForm({ onAlbumAdded }) {
   const [query, setQuery] = useState("");
@@ -33,7 +33,7 @@ export default function AddAlbumForm({ onAlbumAdded }) {
     setMessage("");
     const newAlbum = {
       nome: album.nome,
-      aritista: album.artista,
+      artista: album.artista,
       ano: album.ano,
       genero: "A definir",
       capa: `https://coverartarchive.org/release-group/${album.id}/front-250`,

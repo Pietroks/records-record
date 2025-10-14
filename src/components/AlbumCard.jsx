@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export default function AlbumCard({ album, onRate }) {
   return (
-    <div className="border rounder-lg p-4 shadow-md  bg-gray-800 text-white">
+    <div className="border rounded-lg p-4 shadow-md  bg-gray-800 text-white">
       <Image
         src={album.capa || "/placeholder-cover.jpg"}
         alt={`Capa do album ${album.nome}`}

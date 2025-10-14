@@ -9,7 +9,7 @@ export async function GET(request) {
   }
 
   try {
-    const response = await fetch(`https://musicbrainsz.org/ws/2/release-group/?query=${encodeURIComponent(query)}&fmt=json`, {
+    const response = await fetch(`https://musicbrainz.org/ws/2/release-group/?query=${encodeURIComponent(query)}&fmt=json`, {
       headers: {
         "User-Agent": "RecordsRecord/1.0.0 (pietrokettner52@gmail.com)",
       },
@@ -28,7 +28,7 @@ export async function GET(request) {
       ano: item["first-release-date"]?.split("-")[0] || "N/A",
     }));
 
-    return NextResponse.json({ formattedResults });
+    return NextResponse.json(formattedResults);
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

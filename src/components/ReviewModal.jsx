@@ -1,7 +1,7 @@
-"use-client";
+"use client";
 
 import { useState } from "react";
-import { supabase } from "../../lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 
 const ratingLegend = {
   0: "Pessimo",
@@ -58,7 +58,7 @@ export default function ReviewModal({ album, onClose, onReviewSaved }) {
           {Object.keys(ratings).map((criterio) => (
             <div key={criterio} className="mb-4">
               <label className="block text-white capitalize mb-1">{criterio}</label>
-              <div className="flex- items-center space-x-4">
+              <div className="flex items-center space-x-4">
                 <input
                   type="range"
                   min="0"
@@ -74,7 +74,7 @@ export default function ReviewModal({ album, onClose, onReviewSaved }) {
             </div>
           ))}
 
-          <div className="mb-b">
+          <div className="mb-4">
             <label htmlFor="Observacoes" className="block text-white mb-1">
               Observações
             </label>
@@ -88,7 +88,7 @@ export default function ReviewModal({ album, onClose, onReviewSaved }) {
 
           {error && <p className="text-red-600 mb-4">{error}</p>}
 
-          <div className="flex- justify-end space-x-4">
+          <div className="flex justify-end space-x-4">
             <button type="button" onClick={onClose} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
               Cancelar
             </button>
