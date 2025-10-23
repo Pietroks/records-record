@@ -33,18 +33,18 @@ export default function ReviewModal({ album, onClose, onReviewSaved }) {
     setIsSaving(true);
     setError("");
 
-    const reviewData = {
-      album_id: album.id,
-      ...ratings,
-      observacoes,
-    };
+    const { data: existing } = await supabase.from("reviews").select("id").eq("album_id", album.id).maybeSingle();
+    if (existing) {
+      setError("Voce ja avaliou este album.");
+      setIsSaving(false);
+      return;
+    }
 
-    const { data, error } = await supabase.from("reviews").insert([reviewData]);
-
-    if (error) {
-      setError(`Erro ao salvar avaliação: ${error.message}`);
-    } else {
+    const { error } = await supabase.from("reviews").insert([reviewData]);
+    if (error) setError(`Erro: ${error.message}`);
+    else {
       onReviewSaved();
+      setTimeout(onClose, 500);
     }
     setIsSaving(false);
   };

@@ -13,7 +13,7 @@ export default function HomePage() {
 
   async function fetchAlbums() {
     setLoading(true);
-    const { data, error } = await supabase.from("albums").select("*").order("criado_em", { ascending: true });
+    const { data, error } = await supabase.from("albums").select("*").order("criado_em", { ascending: false });
 
     if (error) {
       console.error("Erro ao buscar albums:", error);
@@ -25,6 +25,15 @@ export default function HomePage() {
 
   useEffect(() => {
     fetchAlbums();
+    const subscription = supabase
+      .channel("albums-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "albums" }, (payload) => {
+        if (payload.eventType === "INSERT") {
+          setAlbums((prev) => [payload.new, ...prev]);
+        }
+      })
+      .subscribe();
+    return () => supabase.removeChannel(subscription);
   }, []);
 
   const handleOpenModal = (album) => {

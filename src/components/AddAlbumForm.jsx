@@ -2,9 +2,9 @@
 
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import Image from "next/image";
+import { useDebounce } from "use-debounce";
 
 const PAGE_SIZE = 20;
 
@@ -15,20 +15,27 @@ export default function AddAlbumForm({ onAlbumAdded }) {
   const [message, setMessage] = useState("");
   const [offset, setOffset] = useState(0);
   const [totalResults, setTotalResults] = useState(0);
+  const [searchedQuery, setSearchedQuery] = useState("");
+  const [debouncedQuery] = useDebounce(query, 500);
 
-  // Função para buscar os dados da API
-  const fetchMoreResults = async (currentOffset, isNewSearch = false) => {
+  const fetchMoreResults = useCallback(async (queryToSearch, currentOffset, isNewSearch = false) => {
+    if (queryToSearch.trim() === "") {
+      setResults([]);
+      setTotalResults(0);
+      return;
+    }
+
     setLoading(true);
     setMessage("");
+
     try {
-      const response = await fetch(`/api/search-albums?q=${query}&limit=${PAGE_SIZE}&offset=${currentOffset}`);
+      const response = await fetch(`/api/search-albums?q=${queryToSearch}&limit=${PAGE_SIZE}&offset=${currentOffset}`);
       const data = await response.json();
 
       if (data.error) {
         throw new Error(data.error);
       }
 
-      // Atualiza o estado dos resultados
       setResults((prevResults) => {
         const newAlbums = data.albums.filter((newAlbum) => !prevResults.find((existingAlbum) => existingAlbum.id === newAlbum.id));
         return isNewSearch ? data.albums : [...prevResults, ...newAlbums];
@@ -41,23 +48,34 @@ export default function AddAlbumForm({ onAlbumAdded }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Função chamada quando o formulário de busca é submetido
+  useEffect(() => {
+    if (debouncedQuery.trim().length > 2) {
+      setResults([]);
+      setOffset(0);
+      setSearchedQuery(debouncedQuery);
+      fetchMoreResults(debouncedQuery, 0, true);
+    } else {
+      setResults([]);
+      setTotalResults(0);
+      setSearchedQuery("");
+    }
+  }, [debouncedQuery, fetchMoreResults]);
+
   const handleSearch = (e) => {
     e.preventDefault();
     if (query.trim() === "") return;
-    setResults([]); // Limpa os resultados antigos antes de uma nova busca
+    setResults([]);
     setOffset(0);
-    fetchMoreResults(0, true);
+    setSearchedQuery(query);
+    fetchMoreResults(query, 0, true);
   };
 
-  // Função chamada pelo botão "Carregar mais"
   const handleLoadMore = () => {
-    fetchMoreResults(offset);
+    fetchMoreResults(searchedQuery, offset);
   };
 
-  // Função para adicionar um álbum à base de dados
   const handleAddAlbum = async (album) => {
     setMessage("");
     const newAlbum = {
@@ -65,7 +83,7 @@ export default function AddAlbumForm({ onAlbumAdded }) {
       nome: album.nome,
       artista: album.artista,
       ano: album.ano,
-      genero: "A definir",
+      genero: album.genero,
       capa: `https://coverartarchive.org/release-group/${album.id}/front-250`,
     };
 
@@ -83,10 +101,10 @@ export default function AddAlbumForm({ onAlbumAdded }) {
       setQuery("");
       setResults([]);
       setTotalResults(0);
+      setSearchedQuery("");
     }
   };
 
-  // O JSX que desenha o componente na tela
   return (
     <div className="my-8 p-6 bg-gray-900 rounded-lg shadow-xl text-center ">
       <h2 className="text-2xl font-bold mb-4 text-white">Adicionar novo Album</h2>
@@ -96,12 +114,12 @@ export default function AddAlbumForm({ onAlbumAdded }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Digite o nome do Album ou artista"
-          className="w-3xl p-2 rounded bg-gray-700 text-white border border-gray-600"
+          className="w-full max-w-3xl mx-auto p-2 rounded bg-gray-700 text-white border border-gray-600"
         />
         <button
           type="submit"
           disabled={loading && results.length === 0}
-          className="cursor-pointer mt-2 w-3xl bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded"
+          className="cursor-pointer mt-2 w-full max-w-3xl mx-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded"
         >
           {loading && results.length === 0 ? "Buscando..." : "Buscar"}
         </button>
@@ -109,18 +127,18 @@ export default function AddAlbumForm({ onAlbumAdded }) {
 
       {message && <p className="mt-4 text-center text-yellow-400">{message}</p>}
 
-      <div className="mt-4 max-h-80 overflow-y-auto text-center w-3xl mx-auto">
+      <div className="mt-4 max-h-80 overflow-y-auto text-center w-full max-w-3xl mx-auto">
         {results.map((album) => (
           <div key={album.id} className="flex items-center space-x-4 p-2 border-b border-gray-700">
-            <Image
-              src={album.capa || "/placeholder.jpg"}
+            <img
+              src={album.capa || "/album-cover-made-with-love-by-neural-frames.png"}
               alt={`Capa do ${album.nome}`}
               width={50}
               height={50}
               className="rounded-md object-cover"
               onError={(e) => {
                 e.target.onerror = null;
-                e.target.src = "/placeholder.jpg";
+                e.target.src = "/album-cover-made-with-love-by-neural-frames.png";
               }}
             />
             <div className="flex-grow text-left">
@@ -128,6 +146,7 @@ export default function AddAlbumForm({ onAlbumAdded }) {
               <p className="text-sm text-gray-400">
                 {album.artista} ({album.ano})
               </p>
+              <p className="text-xs text-blue-400 capitalize">{album.genero}</p>
             </div>
             <button
               onClick={() => handleAddAlbum(album)}
